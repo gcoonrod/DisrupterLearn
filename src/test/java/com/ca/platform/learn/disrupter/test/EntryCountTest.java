@@ -3,7 +3,9 @@ package com.ca.platform.learn.disrupter.test;
 import com.ca.platform.learn.disrupter.Consumer;
 import com.ca.platform.learn.disrupter.Event;
 import com.ca.platform.learn.disrupter.Producer;
+import com.lmax.disruptor.BusySpinWaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
+import com.lmax.disruptor.dsl.ProducerType;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.experimental.theories.DataPoints;
@@ -36,24 +38,24 @@ public class EntryCountTest {
         startTime = System.nanoTime();
         System.out.println("Beginning tests: " + points);
 
-        disruptor = new Disruptor<Event>(Event.factory, 1024, executor);
+        disruptor = new Disruptor<Event>(Event.factory, 1024, executor, ProducerType.MULTI, new BusySpinWaitStrategy());
         disruptor.handleEventsWith(new Consumer("C1")).then(new Consumer("C2")).then(new Consumer("C3"));
 
         Producer producer1 = new Producer("P1", points, disruptor).goSlow();
         Producer producer2 = new Producer("P2", points, disruptor);
-        Producer producer3 = new Producer("P3", points, disruptor);
+        //Producer producer3 = new Producer("P3", points, disruptor);
         disruptor.publishEvent(producer1);
         disruptor.publishEvent(producer2);
-        disruptor.publishEvent(producer3);
+        //disruptor.publishEvent(producer3);
         disruptor.start();
         executor.submit(producer1);
         executor.submit(producer2);
-        executor.submit(producer3);
+        //executor.submit(producer3);
 
         sleep();
         producer1.stop();
         producer2.stop();
-        producer3.stop();
+        //producer3.stop();
 
         endTime = System.nanoTime();
         System.out.println("Tests complete");
